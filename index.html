@@ -27,9 +27,42 @@
         },
       }
     </script>
+    <script>
+      window.__ADCAST_MOUNTED__ = false;
+      window.addEventListener('error', function(e) {
+        console.error('AdCast error caught:', e);
+        setTimeout(function() {
+          var root = document.getElementById('root');
+          if (root && !window.__ADCAST_MOUNTED__ && !document.getElementById('adcast-err-dialog')) {
+            var errorMsg = (e && e.message) || (e && e.error && e.error.message) || 'Erro ao carregar os módulos da aplicação';
+            root.innerHTML = '<div id="adcast-err-dialog" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 24px;">' +
+              '<div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 24px; border-radius: 16px; max-width: 540px; margin-bottom: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">' +
+              '<div style="font-size: 36px; margin-bottom: 12px;">⚠️</div>' +
+              '<h3 style="color: #f87171; margin: 0 0 10px 0; font-size: 20px; font-weight: 700;">Erro ao Iniciar o AdCast</h3>' +
+              '<p style="color: #cbd5e1; font-size: 14px; margin: 0 0 16px 0; font-family: monospace; background: #020617; padding: 10px; border-radius: 8px; overflow-x: auto; text-align: left;">' + errorMsg + '</p>' +
+              '<p style="color: #94a3b8; font-size: 13px; margin: 0; line-height: 1.5;">Se você fez deploy no <strong>Netlify</strong>, certifique-se de configurar a pasta de publicação como <code>dist</code> (ou arrastar a pasta <code>dist</code> após rodar <code>npm run build</code>).</p>' +
+              '</div>' +
+              '<div style="display: flex; gap: 12px;">' +
+              '<button onclick="window.location.reload();" style="padding: 12px 24px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Tentar Novamente</button>' +
+              '<button onclick="localStorage.clear(); if(window.caches) caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});}); window.location.reload();" style="padding: 12px 24px; background: #334155; color: #cbd5e1; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Limpar Cache Total</button>' +
+              '</div>' +
+              '</div>';
+          }
+        }, 1500);
+      });
+    </script>
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 24px;">
+        <div style="width: 44px; height: 44px; border: 4px solid #1e293b; border-top-color: #6366f1; border-radius: 50%; animation: adcast-spin 0.8s linear infinite; margin-bottom: 20px;"></div>
+        <h2 style="font-size: 22px; font-weight: 800; margin: 0 0 6px 0; color: #ffffff; letter-spacing: -0.5px;">ADCAST</h2>
+        <p style="font-size: 14px; color: #94a3b8; margin: 0;">Carregando sistema de sinalização digital...</p>
+        <style>
+          @keyframes adcast-spin { to { transform: rotate(360deg); } }
+        </style>
+      </div>
+    </div>
     <script>
       // Captura o prompt de instalação para uso no React
       window.deferredPrompt = null;

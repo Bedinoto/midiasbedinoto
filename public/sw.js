@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adcast-cache-v8';
+const CACHE_NAME = 'adcast-cache-v9';
 const MEDIA_CACHE_NAME = 'adcast-media-v3';
 
 self.addEventListener('install', (event) => {
@@ -17,18 +17,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignora requisições não-GET (POST, PUT, DELETE, etc.)
+  // Ignora requisições não-GET
   if (event.request.method !== 'GET') {
     return;
   }
 
   const url = new URL(event.request.url);
 
-  // 1. Otimização de Egress para mídias do Supabase Storage
+  // Otimização e cache offline exclusivamente para mídias do Supabase Storage
   if (url.href.includes('/storage/v1/object/public/')) {
-    // Range requests (streaming nativo de vídeo) não devem ser cacheados pelo Service Worker
+    // Range requests (streaming de vídeo) são tratados nativamente pelo navegador
     if (event.request.headers.get('range')) {
-      return; 
+      return;
     }
 
     event.respondWith(
@@ -43,7 +43,6 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         } catch (err) {
-          // Se falhou e não tem cache, relança
           if (cachedResponse) return cachedResponse;
           throw err;
         }
@@ -52,27 +51,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Navegação SPA (HTML)
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request).catch(async () => {
-        const cached = await caches.match('/index.html');
-        if (cached) return cached;
-        throw new Error('Offline and no cached index.html');
-      })
-    );
-    return;
-  }
-
-  // 3. Demais recursos estáticos: deixa o navegador fazer o fetch padrão
-  // Se quisermos offline para app shell:
-  // Mas NUNCA falhar uma requisição com Response vazia se caches.match for undefined!
-  // Logo, simplesmente não interceptamos ou fazemos Network-First com fallback seguro:
-  event.respondWith(
-    fetch(event.request).catch(async () => {
-      const cached = await caches.match(event.request);
-      if (cached) return cached;
-      throw new Error(`Network failure for ${event.request.url}`);
-    })
-  );
+  // Para todo o resto (scripts, css, html, fontes), NÃO intercepta.
+  // Deixa o navegador usar o fluxo nativo da rede e cache HTTP sem risco de tela preta.
 });

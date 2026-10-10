@@ -29,22 +29,40 @@ const App: React.FC = () => {
 
   // Carrega o projeto ativo ou da URL
   useEffect(() => {
-    const init = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlSyncId = urlParams.get('sync');
-      const savedSyncId = getActiveProjectId();
-      const targetId = urlSyncId || savedSyncId;
+    let mounted = true;
+    const safetyTimer = setTimeout(() => {
+      if (mounted) setIsLoading(false);
+    }, 7000);
 
-      if (targetId) {
-        const remote = await loadRemoteState(targetId);
-        if (remote) {
-          setState(remote);
-          setActiveProjectId(targetId);
+    const init = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSyncId = urlParams.get('sync');
+        const savedSyncId = getActiveProjectId();
+        const targetId = urlSyncId || savedSyncId;
+
+        if (targetId) {
+          const remote = await loadRemoteState(targetId);
+          if (remote && mounted) {
+            setState(remote);
+            setActiveProjectId(targetId);
+          }
+        }
+      } catch (err) {
+        console.error('Falha ao inicializar estado do projeto:', err);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+          clearTimeout(safetyTimer);
         }
       }
-      setIsLoading(false);
     };
     init();
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   // Escuta mudanças em tempo real do Supabase

@@ -10,6 +10,8 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+(window as any).__ADCAST_MOUNTED__ = true;
+
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
