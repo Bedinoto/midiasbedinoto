@@ -6,14 +6,14 @@
     <title>AdCast | Sinalização Digital</title>
     
     <!-- PWA Meta Tags -->
-    <link id="manifest-link" rel="manifest" href="manifest.json" />
+    <link id="manifest-link" rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#4f46e5" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AdCast" />
 
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="/index.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
     <script>
@@ -27,19 +27,6 @@
         },
       }
     </script>
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.45.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
@@ -56,8 +43,11 @@
         const hash = window.location.hash;
         const isPlayer = hash.startsWith('#player/');
         
-        fetch('manifest.json')
-          .then(response => response.json())
+        fetch('/manifest.json')
+          .then(response => {
+            if (!response.ok) throw new Error('Manifest not found');
+            return response.json();
+          })
           .then(manifest => {
             if (isPlayer) {
               manifest.start_url = window.location.pathname + window.location.search + hash;
@@ -69,7 +59,11 @@
             const stringManifest = JSON.stringify(manifest);
             const blob = new Blob([stringManifest], {type: 'application/json'});
             const manifestURL = URL.createObjectURL(blob);
-            document.querySelector('#manifest-link').setAttribute('href', manifestURL);
+            const link = document.querySelector('#manifest-link');
+            if (link) link.setAttribute('href', manifestURL);
+          })
+          .catch(err => {
+            console.warn('Manifest update skipped:', err);
           });
       }
 
@@ -78,7 +72,7 @@
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
+          navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('AdCast PWA: Ativo'))
             .catch(err => console.log('AdCast PWA: Erro', err));
         });

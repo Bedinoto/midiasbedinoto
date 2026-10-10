@@ -282,7 +282,16 @@ export const Player: React.FC<PlayerProps> = ({ screenId }) => {
     );
   }
 
-  const activeItem = currentItems[currentIndex];
+  const activeItem = currentItems[currentIndex] || currentItems[0];
+  if (!activeItem) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-900 text-slate-400 p-10 text-center">
+        <Monitor size={80} className="mb-4 opacity-20" />
+        <p className="text-lg">Carregando itens da programação...</p>
+      </div>
+    );
+  }
+
   const handleMediaEnd = () => setCurrentIndex((prev) => (prev + 1) % currentItems.length);
 
   return (
